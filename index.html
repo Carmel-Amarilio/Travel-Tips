@@ -1,46 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="img/location.png" type="image/x-icon">
+    <script src="https://kit.fontawesome.com/3b18ac9277.js" crossorigin="anonymous"></script> 
     <link rel="stylesheet" href="css/main.css">
     <title>TravelTip</title>
 </head>
+
 <body>
-<header>
-    <h1>TravelTip</h1>
-    <input type="text" placeholder="Enter location">
-    <button class="btn">Go</button>
-    <button onclick="onGetUserPos()" class="btn-user-pos btn">Get User Position</button>
-</header>
-<main>
-    <p>You are at: <span class="user-pos"></span></p>
-    <section class="flex space-around">
-        <div id="map" style="width: 100%; height: 400px;"></div>
-        <section>
-            <section class="flex space-around">
-                <section class="weather">weather</section>
-            </section>
+    <header>
+        <h1>TravelTip</h1>
+        <input type="text" placeholder="Enter location">
+        <button class="btn">Go</button>
+        <button onclick="onGetUserPos()" class="btn-user-pos btn">Get User Position</button>
+    </header>
+    <main>
+        <p>You are at: <span class="user-pos"></span></p>
+        <section class="flex space-around">
+            <div id="map" style="width: 100%; height: 400px;"></div>
             <section>
-                <button onclick="onGetLocs()" class="btn-get-locs btn">Get Locations</button>
-                <button onclick="onAddMarker()" class="btn-add-marker btn">Add Marker Speific Location</button>
-                <p>Locations: 
-                    <pre class="locs">Tokyo  <button onclick="onPanTo()"class="btn-pan btn">Pan Map to location</button></pre>
-                </p>
-                
+                <section class="flex space-around">
+                    <section class="weather">weather</section>
+                </section>
+                <section>
+                    <p>Locations:
+                    <section class="places">
+                    </section>
+                    </p>
+
+                </section>
             </section>
+
         </section>
-
-    </section>
-</main>
+    </main>
 
 
 
 
 
-    
+
 
     <script type="module" src="js/app.controller.js"></script>
 </body>
+
 </html>
