@@ -1,17 +1,19 @@
-import { utilService } from './util.service.js'
-
+import { utilService } from "./util.service.js";
 
 export const mapService = {
   initMap,
   addMarker,
   panTo,
-  removePlace
+  removePlace,
+  searchLocation,
 };
 
 // Var that is used throughout this Module (not global)
+const geoCode =
+  "https://maps.googleapis.com/maps/api/geocode/json?latlng=40.714224,-73.961452&key=AIzaSyCF_57rzx339nMeHxVEJqQ_fyh43L2SxlcY";
 var gMap;
-let gPlaces = []
-let gMarkers = []
+let gPlaces = [];
+let gMarkers = [];
 
 function initMap(lat = 51.505591765464914, lng = -0.09048158007556373) {
   console.log("InitMap");
@@ -21,13 +23,13 @@ function initMap(lat = 51.505591765464914, lng = -0.09048158007556373) {
       center: { lat, lng },
       zoom: 15,
     });
-    gMap.addListener('click', ev => {
-      const name = prompt('Place name?', 'Place 1')
-      if (!name) return
-      const lat = ev.latLng.lat()
-      const lng = ev.latLng.lng()
-      addPlace(name, lat, lng, gMap.getZoom())
-  })
+    gMap.addListener("click", (ev) => {
+      const name = prompt("Place name?", "Place 1");
+      if (!name) return;
+      const lat = ev.latLng.lat();
+      const lng = ev.latLng.lng();
+      addPlace(name, lat, lng, gMap.getZoom());
+    });
     console.log("Map!", gMap);
   });
 }
@@ -47,11 +49,11 @@ function panTo(lat, lng) {
 }
 
 function removePlace(placeId) {
-  const deleteIndex = gPlaces.findIndex(Place => Place.id === placeId)
-  gPlaces.splice(deleteIndex, 1)
+  const deleteIndex = gPlaces.findIndex((Place) => Place.id === placeId);
+  gPlaces.splice(deleteIndex, 1);
   // saveToStorage('placesDB', gPlaces)
-  renderPlaces(gPlaces)
-  renderMarkers(gPlaces)
+  renderPlaces(gPlaces);
+  renderMarkers(gPlaces);
 }
 
 function _connectGoogleApi() {
@@ -61,7 +63,6 @@ function _connectGoogleApi() {
   elGoogleApi.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}`;
   elGoogleApi.async = true;
   document.body.append(elGoogleApi);
-  console.log(elGoogleApi);
 
   return new Promise((resolve, reject) => {
     elGoogleApi.onload = resolve;
@@ -69,42 +70,65 @@ function _connectGoogleApi() {
   });
 }
 
-
 function addPlace(name, lat, lng, zoom) {
-  gPlaces.push(_createPlace(name, lat, lng, zoom))
-  renderPlaces(gPlaces)
-  renderMarkers(gPlaces)
+  gPlaces.push(_createPlace(name, lat, lng, zoom));
+  renderPlaces(gPlaces);
+  renderMarkers(gPlaces);
   // saveToStorage('placesDB', gPlaces)
 }
 
-function _createPlace(name, lat, lng, zoom)  {
+function _createPlace(name, lat, lng, zoom) {
   return {
-      id: utilService.makeId(),
-      name,
-      lat,
-      lng ,
-      zoom
-  }
+    id: utilService.makeId(),
+    name,
+    lat,
+    lng,
+    zoom,
+  };
 }
 
 function renderPlaces(places) {
-  const placesHtml = places.map(place => `
+  const placesHtml = places
+    .map(
+      (place) => `
       <li>
           <span>${place.name}:</span>
           <button onclick="onPanTo(${place.lat}, ${place.lng})"class="btn-pan btn"><i class="fa-solid fa-location-dot"></i></button>
           <button onclick="OnRemove('${place.id}')" class="btn"><i class="fa-solid fa-trash"></i></button>
       </li>
-  `).join('')
-  document.querySelector('.places').innerHTML = placesHtml
+  `
+    )
+    .join("");
+  document.querySelector(".places").innerHTML = placesHtml;
 }
 
 function renderMarkers(places) {
-  if (gMarkers) gMarkers.forEach(marker => marker.setMap(null))
-  gMarkers = places.map(place => {
-      return new google.maps.Marker({
-          position: place,
-          map: gMap,
-          title: place.name
-      })
-  })
+  if (gMarkers) gMarkers.forEach((marker) => marker.setMap(null));
+  gMarkers = places.map((place) => {
+    return new google.maps.Marker({
+      position: place,
+      map: gMap,
+      title: place.name,
+    });
+  });
+}
+
+function searchLocation(value) {
+  fetch(
+    `https://maps.googleapis.com/maps/api/geocode/json?address=${value}&key=AIzaSyBXkKqWpFHznH0qX89_VE5Zb-M-7FyBnU8`
+  )
+    .then((response) => response.json())
+    .then((jsonData) => {
+      if (jsonData && jsonData.results.length) {
+        const name = jsonData.results[0].formatted_address;
+        const lat = jsonData.results[0].geometry.location.lat;
+        const lng = jsonData.results[0].geometry.location.lng;
+
+        addPlace(name, lat, lng, gMap.getZoom());
+        panTo(lat, lng);
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 }
