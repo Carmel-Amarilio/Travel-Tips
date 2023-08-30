@@ -32,3 +32,11 @@ body {
   color: white;
   background-color: #1d63ff;
 }
+
+.weather{
+  width: 40vw;
+  border: lightgray solid .5px;
+  padding: 10px;
+  text-align: center;
+  margin: 10px;
+}

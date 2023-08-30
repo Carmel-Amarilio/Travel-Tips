@@ -15,6 +15,7 @@ let gMarkers = []
 
 function initMap(lat = 51.505591765464914, lng = -0.09048158007556373) {
   console.log("InitMap");
+  getWeather(lat, lng).then(res => rentWeather(res))
   return _connectGoogleApi().then(() => {
     console.log("google available");
     gMap = new google.maps.Map(document.querySelector("#map"), {
@@ -27,9 +28,35 @@ function initMap(lat = 51.505591765464914, lng = -0.09048158007556373) {
       const lat = ev.latLng.lat()
       const lng = ev.latLng.lng()
       addPlace(name, lat, lng, gMap.getZoom())
-  })
+      getWeather(lat, lng).then(res => rentWeather(res))
+    })
     console.log("Map!", gMap);
   });
+  
+}
+
+function getWeather(lat, lng) {
+  return fetch(`http://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lng}&limit5&appid=307b1a8173ac11cf753e139fe19fa56e`)
+    .then(res => res.json())
+    .then(lok => {
+      const city = lok[0].name
+      const country = lok[0].country
+      return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=307b1a8173ac11cf753e139fe19fa56e`)
+        .then(res => res.json())
+        .then(weather => {
+          return {
+            city, 
+            country,
+            temp: weather.main.temp,
+            tempMin: weather.main.temp_min,
+            tempMax: weather.main.temp_max,
+            weather: weather.weather[0].main,
+            wind: weather.wind.speed,
+          }
+        })
+    })
+
+    
 }
 
 function addMarker(loc) {
@@ -44,6 +71,7 @@ function addMarker(loc) {
 function panTo(lat, lng) {
   var laLatLng = new google.maps.LatLng(lat, lng);
   gMap.panTo(laLatLng);
+  getWeather(lat, lng).then(res => rentWeather(res))
 }
 
 function removePlace(placeId) {
@@ -52,6 +80,7 @@ function removePlace(placeId) {
   // saveToStorage('placesDB', gPlaces)
   renderPlaces(gPlaces)
   renderMarkers(gPlaces)
+  if(gPlaces[0])getWeather(gPlaces[0].lat, gPlaces[0].lng).then(res => rentWeather(res))
 }
 
 function _connectGoogleApi() {
@@ -77,13 +106,13 @@ function addPlace(name, lat, lng, zoom) {
   // saveToStorage('placesDB', gPlaces)
 }
 
-function _createPlace(name, lat, lng, zoom)  {
+function _createPlace(name, lat, lng, zoom) {
   return {
-      id: utilService.makeId(),
-      name,
-      lat,
-      lng ,
-      zoom
+    id: utilService.makeId(),
+    name,
+    lat,
+    lng,
+    zoom
   }
 }
 
@@ -101,10 +130,18 @@ function renderPlaces(places) {
 function renderMarkers(places) {
   if (gMarkers) gMarkers.forEach(marker => marker.setMap(null))
   gMarkers = places.map(place => {
-      return new google.maps.Marker({
-          position: place,
-          map: gMap,
-          title: place.name
-      })
+    return new google.maps.Marker({
+      position: place,
+      map: gMap,
+      title: place.name
+    })
   })
+}
+
+function rentWeather({city, country, temp, tempMin, tempMax, weather, wind}){
+  document.querySelector('.weather').innerHTML = `
+  <h3>weather today</h3>
+  <p>${city}, ${country} <span>${weather}</span></p>
+  <p>${Math.trunc(temp- 273.15)}C temperature from ${Math.trunc(tempMin- 273.15)} to ${Math.trunc(tempMax- 273.15)}C, wind ${wind}m/s</p>
+  `
 }
